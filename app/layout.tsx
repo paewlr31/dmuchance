@@ -1,18 +1,12 @@
 import { Analytics } from "@vercel/analytics/next"
 import type { Metadata, Viewport } from "next"
-import { Fredoka, Nunito } from "next/font/google"
+import { Nunito } from "next/font/google"
 import { CartProvider } from "@/components/cart-provider"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import "./globals.css"
 
-const display = Fredoka({
-  subsets: ["latin", "latin-ext"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display",
-})
-
-const body = Nunito({
+const nunito = Nunito({
   subsets: ["latin", "latin-ext"],
   weight: ["500", "700", "800"],
   variable: "--font-body",
@@ -31,7 +25,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pl" className={`${display.variable} ${body.variable}`}>
+    <html lang="pl" className={nunito.variable}>
       <body className="min-h-screen bg-[#fffdf6] font-[family-name:var(--font-body)] text-[#163024] antialiased">
         <CartProvider>
           <SiteHeader />
