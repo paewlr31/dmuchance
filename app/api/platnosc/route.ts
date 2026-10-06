@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { validateCheckout, type CheckoutInput } from "@/lib/booking"
 import { sendOrderEmail } from "@/lib/mail"
-import { availabilityProblems, newSessionId, saveOrder, type StoredOrder } from "@/lib/orders"
+import { availabilityProblems, newSessionId, ordersCanBeSaved, saveOrder, type StoredOrder } from "@/lib/orders"
 import { p24Config, registerTransaction, requestOrigin } from "@/lib/p24"
 
 export const runtime = "nodejs"
@@ -39,13 +39,20 @@ export async function POST(request: Request) {
       emailSent: false,
       ...order,
     }
-    await saveOrder(stored)
+    const persist = ordersCanBeSaved()
+    if (persist) await saveOrder(stored)
 
     if (!paymentOn) {
       await sendOrderEmail(stored)
-      stored.emailSent = true
-      await saveOrder(stored)
+      if (persist) {
+        stored.emailSent = true
+        await saveOrder(stored)
+      }
       return NextResponse.json({ sent: true })
+    }
+
+    if (!persist) {
+      return NextResponse.json({ error: "Płatność wymaga magazynu zamówień." }, { status: 503 })
     }
 
     const origin = requestOrigin(request)

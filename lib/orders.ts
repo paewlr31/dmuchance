@@ -41,6 +41,10 @@ function useBlob() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN)
 }
 
+export function ordersCanBeSaved() {
+  return useBlob() || !process.env.VERCEL
+}
+
 function assertStorage() {
   if (!useBlob() && process.env.VERCEL) {
     throw new Error("Na Vercelu dodaj magazyn Blob. Bez niego serwer nie zapamięta zamówienia do czasu potwierdzenia płatności.")
