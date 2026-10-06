@@ -11,7 +11,7 @@ function resendClient() {
 
 export function orderMessage(order: StoredOrder) {
   const lines = [
-    "Wpłynęło opłacone zamówienie.",
+    order.status === "received" ? "Nowe zamówienie. Płatność online jest wyłączona, więc wpłata nie została pobrana." : "Wpłynęło opłacone zamówienie.",
     "",
     `Numer zamówienia: ${order.sessionId}`,
     order.p24OrderId ? `Numer płatności Przelewy24: ${order.p24OrderId}` : "",

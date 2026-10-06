@@ -8,7 +8,7 @@ import { getProduct } from "@/lib/products"
 export type StoredOrder = {
   sessionId: string
   createdAt: string
-  status: "pending" | "paid"
+  status: "pending" | "paid" | "received"
   emailSent: boolean
   p24OrderId?: number
   customer: {
@@ -141,7 +141,7 @@ export async function availabilityProblems(items: PricedItem[], dateFrom: string
     let used = 0
     for (const order of orders) {
       const age = now - Date.parse(order.createdAt)
-      const blocks = order.status === "paid" || (order.status === "pending" && age < 45 * 60 * 1000)
+      const blocks = order.status === "paid" || order.status === "received" || (order.status === "pending" && age < 45 * 60 * 1000)
       if (!blocks) continue
       if (!rangesOverlap(dateFrom, dateTo, order.event.dateFrom, order.event.dateTo)) continue
       used += order.items.find((line) => line.slug === item.slug)?.qty ?? 0

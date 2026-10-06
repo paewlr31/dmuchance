@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const steps = [
   ["01", "Wybierasz", "Dodajesz do koszyka jedną albo kilka atrakcji. Przy każdym modelu widać, ile sztuk jest w ofercie."],
   ["02", "Opisujesz imprezę", "Podajesz imię, e-mail, telefon, adres dostawy, daty, godziny i rodzaj imprezy."],
-  ["03", "Płacisz", "Przechodzisz do Przelewy24. Po wpłacie dostajemy maila ze wszystkim, co wpisałeś."],
+  ["03", "Wysyłasz", "Dostajemy maila ze wszystkim, co wpisałeś. Płatność online dołączymy, gdy będzie konto Przelewy24."],
 ]
 
 export default function AboutPage() {

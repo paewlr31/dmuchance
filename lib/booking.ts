@@ -55,7 +55,7 @@ function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
 }
 
-export function validateCheckout(input: CheckoutInput) {
+export function validateCheckout(input: CheckoutInput, options?: { requireP24?: boolean }) {
   const errors: string[] = []
   const name = clean(input.customer?.name, 40)
   const email = clean(input.customer?.email, 50)
@@ -91,7 +91,7 @@ export function validateCheckout(input: CheckoutInput) {
   if (city.length < 2) errors.push("Podaj miejscowość.")
   if (guests && !/^\d{1,4}$/.test(guests)) errors.push("Liczba dzieci musi być liczbą.")
   if (!input.consent) errors.push("Zaakceptuj zasady zamówienia i zwrotów.")
-  if (!input.p24Consent) errors.push("Zaakceptuj regulamin Przelewy24.")
+  if (options?.requireP24 !== false && !input.p24Consent) errors.push("Zaakceptuj regulamin Przelewy24.")
 
   const rawItems = Array.isArray(input.items) ? input.items : []
   const priced: PricedItem[] = []

@@ -25,7 +25,7 @@ export default function HomePage() {
             Dmuchańce, które robią imprezę
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-[#4e6b5a]">
-            W ofercie jest siedem atrakcji: zamki i zjeżdżalnie. Wybierasz modele, podajesz kontakt, adres i termin, a potem płacisz przez Przelewy24.
+            W ofercie jest siedem atrakcji: zamki i zjeżdżalnie. Wybierasz modele, podajesz kontakt, adres i termin, a zamówienie przychodzi do nas mailem.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/dmuchance" className="inline-flex items-center gap-2 rounded-full bg-[#ffe14d] px-6 py-3 font-extrabold text-[#163024] shadow-[3px_3px_0_#163024]">
@@ -52,7 +52,7 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl flex-wrap justify-center gap-x-8 gap-y-2 text-center text-sm font-extrabold text-[#145c32]">
           <span>Dowóz pod adres imprezy</span>
           <span>Kilka atrakcji w jednym zamówieniu</span>
-          <span>Płatność Przelewy24</span>
+          <span>Zamówienie mailem</span>
           <span>Kontakt mail i telefon przy zamówieniu</span>
         </div>
       </section>

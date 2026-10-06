@@ -1,27 +1,28 @@
 import { NextResponse } from "next/server"
 import { validateCheckout, type CheckoutInput } from "@/lib/booking"
+import { sendOrderEmail } from "@/lib/mail"
 import { availabilityProblems, newSessionId, saveOrder, type StoredOrder } from "@/lib/orders"
 import { p24Config, registerTransaction, requestOrigin } from "@/lib/p24"
 
 export const runtime = "nodejs"
 
+export async function GET() {
+  const config = p24Config()
+  return NextResponse.json({ enabled: config.missing.length === 0 })
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as CheckoutInput | null
   if (!body) return NextResponse.json({ error: "Brak danych zamówienia." }, { status: 400 })
 
-  const { errors, order } = validateCheckout(body)
+  const config = p24Config()
+  const paymentOn = config.missing.length === 0
+  const { errors, order } = validateCheckout(body, { requireP24: paymentOn })
   if (errors.length > 0) return NextResponse.json({ error: errors[0] }, { status: 400 })
 
-  const config = p24Config()
-  if (config.missing.length > 0) {
-    return NextResponse.json(
-      { error: `Płatność nie jest jeszcze podłączona. Brakuje: ${config.missing.join(", ")}.` },
-      { status: 503 },
-    )
-  }
   if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM || !process.env.ORDER_NOTIFY_EMAIL) {
     return NextResponse.json(
-      { error: "Płatność czeka na skrzynkę powiadomień. Uzupełnij Resend i ORDER_NOTIFY_EMAIL." },
+      { error: "Brak skrzynki na zamówienia. Uzupełnij Resend i ORDER_NOTIFY_EMAIL." },
       { status: 503 },
     )
   }
@@ -34,11 +35,18 @@ export async function POST(request: Request) {
     const stored: StoredOrder = {
       sessionId,
       createdAt: new Date().toISOString(),
-      status: "pending",
+      status: paymentOn ? "pending" : "received",
       emailSent: false,
       ...order,
     }
     await saveOrder(stored)
+
+    if (!paymentOn) {
+      await sendOrderEmail(stored)
+      stored.emailSent = true
+      await saveOrder(stored)
+      return NextResponse.json({ sent: true })
+    }
 
     const origin = requestOrigin(request)
     const names = order.items.map((item) => item.name).join(", ")

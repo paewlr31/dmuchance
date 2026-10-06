@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { FormEvent, useMemo, useState } from "react"
+import { FormEvent, useEffect, useMemo, useState } from "react"
 import { useCart } from "@/components/cart-provider"
 import { PageIntro } from "@/components/page-intro"
 import { rentalDays } from "@/lib/booking"
@@ -14,9 +14,11 @@ function today() {
 }
 
 export function CheckoutForm() {
-  const { ready, items } = useCart()
+  const { ready, items, clear } = useCart()
   const [error, setError] = useState("")
   const [sending, setSending] = useState(false)
+  const [done, setDone] = useState(false)
+  const [payEnabled, setPayEnabled] = useState(false)
   const [dateFrom, setDateFrom] = useState(today())
   const [dateTo, setDateTo] = useState(today())
   const days = rentalDays(dateFrom, dateTo) ?? 0
@@ -26,6 +28,13 @@ export function CheckoutForm() {
   )
   const perDay = lines.reduce((sum, line) => sum + line.product!.pricePerDay * line.qty, 0)
   const total = days > 0 ? perDay * days : 0
+
+  useEffect(() => {
+    fetch("/api/platnosc")
+      .then((response) => response.json())
+      .then((data: { enabled?: boolean }) => setPayEnabled(Boolean(data.enabled)))
+      .catch(() => setPayEnabled(false))
+  }, [])
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -51,16 +60,34 @@ export function CheckoutForm() {
           guests: form.get("guests"),
         },
         consent: form.get("consent") === "on",
-        p24Consent: form.get("p24Consent") === "on",
+        p24Consent: payEnabled && form.get("p24Consent") === "on",
       }),
     })
-    const payload = (await response.json().catch(() => null)) as { error?: string; redirectUrl?: string } | null
-    if (!response.ok || !payload?.redirectUrl) {
-      setSending(false)
-      setError(payload?.error || "Nie udało się przejść do płatności.")
+    const payload = (await response.json().catch(() => null)) as { error?: string; redirectUrl?: string; sent?: boolean } | null
+    if (payload?.redirectUrl) {
+      window.location.href = payload.redirectUrl
       return
     }
-    window.location.href = payload.redirectUrl
+    if (response.ok && payload?.sent) {
+      clear()
+      setDone(true)
+      setSending(false)
+      return
+    }
+    setSending(false)
+    setError(payload?.error || "Nie udało się wysłać zamówienia.")
+  }
+
+  if (done) {
+    return (
+      <div className="mt-8 rounded-[1.6rem] bg-[#f3fbe6] p-8">
+        <h2 className="font-[family-name:var(--font-display)] text-3xl">Zamówienie wysłane</h2>
+        <p className="mt-3 text-[#4e6b5a]">Dostaliśmy dane imprezy i kontakt. Płatność online jest na razie wyłączona, odezwiemy się w sprawie terminu.</p>
+        <Link href="/dmuchance" className="mt-6 inline-flex rounded-full bg-[#ffe14d] px-5 py-3 font-extrabold text-[#163024]">
+          Wróć do dmuchańców
+        </Link>
+      </div>
+    )
   }
 
   if (!ready) return <p className="mt-8 text-[#4e6b5a]">Wczytuję zamówienie...</p>
@@ -166,23 +193,25 @@ export function CheckoutForm() {
             .
           </span>
         </label>
-        <label className="flex items-start gap-2 text-sm text-[#4e6b5a]">
-          <input required type="checkbox" name="p24Consent" className="mt-1 accent-[#1c7c3a]" />
-          <span>
-            Oświadczam, że zapoznałem się z{" "}
-            <a className="font-extrabold text-[#1c7c3a] underline" href="https://www.przelewy24.pl/regulamin" target="_blank" rel="noreferrer">
-              regulaminem
-            </a>{" "}
-            i{" "}
-            <a className="font-extrabold text-[#1c7c3a] underline" href="https://www.przelewy24.pl/obowiazekinformacyjny" target="_blank" rel="noreferrer">
-              obowiązkiem informacyjnym
-            </a>{" "}
-            serwisu Przelewy24.
-          </span>
-        </label>
+        {payEnabled ? (
+          <label className="flex items-start gap-2 text-sm text-[#4e6b5a]">
+            <input required type="checkbox" name="p24Consent" className="mt-1 accent-[#1c7c3a]" />
+            <span>
+              Oświadczam, że zapoznałem się z{" "}
+              <a className="font-extrabold text-[#1c7c3a] underline" href="https://www.przelewy24.pl/regulamin" target="_blank" rel="noreferrer">
+                regulaminem
+              </a>{" "}
+              i{" "}
+              <a className="font-extrabold text-[#1c7c3a] underline" href="https://www.przelewy24.pl/obowiazekinformacyjny" target="_blank" rel="noreferrer">
+                obowiązkiem informacyjnym
+              </a>{" "}
+              serwisu Przelewy24.
+            </span>
+          </label>
+        ) : null}
         {error ? <p className="rounded-2xl bg-[#fff1cc] px-4 py-3 text-sm font-bold">{error}</p> : null}
         <button disabled={sending || days < 1} className="rounded-full bg-[#1c7c3a] px-6 py-4 font-extrabold text-white hover:bg-[#145c32] disabled:opacity-60">
-          {sending ? "Przechodzę do płatności..." : "Zapłać przez Przelewy24"}
+          {sending ? "Wysyłam..." : payEnabled ? "Zapłać przez Przelewy24" : "Wyślij zamówienie"}
         </button>
       </div>
       <aside className="h-fit rounded-[1.6rem] bg-[#145c32] p-6 text-white lg:sticky lg:top-28">
@@ -196,12 +225,16 @@ export function CheckoutForm() {
         </ul>
         <p className="mt-4 text-sm">Dni wynajmu: {days || "—"}</p>
         <p className="mt-2 text-3xl font-extrabold text-[#ffe14d]">{days > 0 ? formatPln(total) : "—"}</p>
-        <p className="mt-3 text-xs leading-relaxed text-[#d7f5c4]">Płatność otworzy się na stronie Przelewy24. Po wpłacie wrócisz tutaj, a my dostaniemy maila ze szczegółami.</p>
+        <p className="mt-3 text-xs leading-relaxed text-[#d7f5c4]">
+          {payEnabled
+            ? "Płatność otworzy się na stronie Przelewy24. Po wpłacie wrócisz tutaj, a my dostaniemy maila ze szczegółami."
+            : "Płatność online jest wyłączona. Zamówienie przyjdzie do nas mailem. Przelewy24 włączymy, gdy klient założy konto."}
+        </p>
       </aside>
     </form>
   )
 }
 
 export function CheckoutIntro() {
-  return <PageIntro eyebrow="Zamówienie" title="Gdzie i na kiedy?" text="E-mail i telefon są obowiązkowe. Po tych danych przechodzisz do płatności." />
+  return <PageIntro eyebrow="Zamówienie" title="Gdzie i na kiedy?" text="E-mail i telefon są obowiązkowe. Po wysłaniu dostaniemy te dane mailem." />
 }

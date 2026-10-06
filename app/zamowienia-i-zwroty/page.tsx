@@ -7,12 +7,12 @@ export const metadata: Metadata = {
 }
 
 const items = [
-  ["Jak składa się zamówienie?", "Wybierasz dmuchańce, podajesz imię i nazwisko, e-mail, telefon, adres dostawy, daty, godziny oraz rodzaj imprezy. Potem płacisz przez Przelewy24. Po zaksięgowaniu wpłaty dostajemy maila z tymi danymi."],
+  ["Jak składa się zamówienie?", "Wybierasz dmuchańce, podajesz imię i nazwisko, e-mail, telefon, adres dostawy, daty, godziny oraz rodzaj imprezy. Zamówienie przychodzi do nas mailem. Płatność Przelewy24 włączymy, gdy będzie konto."],
   ["Cena", "Cena przy dmuchańcu jest za jeden dzień i jedną sztukę. Jeśli wynajem trwa kilka dni albo bierzesz więcej sztuk, kwota mnoży się. Dostawa pod wskazany adres jest w tej kwocie."],
   ["Zmiana terminu", "Napisz na adres z zakładki Kontakt. Termin da się przenieść, jeśli atrakcja jest wolna w nowym dniu. Im wcześniej napiszesz, tym łatwiej znaleźć inny dzień."],
   ["Rezygnacja", "Do 7 dni przed rozpoczęciem wynajmu zwracamy pełną wpłatę. Później zwracamy połowę. W dniu imprezy wpłata nie podlega zwrotowi, chyba że nie możemy dojechać z naszej winy."],
   ["Pogoda", "Jeśli z powodu burzy albo silnego wiatru nie da się bezpiecznie rozłożyć dmuchańca, przenosimy termin albo zwracamy wpłatę."],
-  ["Płatność", "Płatność obsługuje Przelewy24. Nie zapisujemy numeru karty ani danych logowania do banku. Na stronie widać tylko podsumowanie zamówienia."],
+  ["Płatność", "Na razie zamówienie nie pobiera wpłaty. Gdy klient założy konto Przelewy24, płatność online włączy się po uzupełnieniu kluczy. Numeru karty na tej stronie nie zapisujemy."],
 ]
 
 export default function ReturnsPage() {
