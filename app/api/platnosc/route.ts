@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { validateCheckout, type CheckoutInput } from "@/lib/booking"
-import { sendOrderEmail } from "@/lib/mail"
+import { sendCustomerOrderEmail, sendOrderEmail } from "@/lib/mail"
 import { availabilityProblems, newCancelToken, newSessionId, ordersCanBeSaved, saveOrder, type StoredOrder } from "@/lib/orders"
 import { p24Config, registerTransaction, requestOrigin } from "@/lib/p24"
 
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
 
     if (!paymentOn) {
       await sendOrderEmail(stored)
+      await sendCustomerOrderEmail(stored).catch(() => undefined)
       if (persist) {
         stored.emailSent = true
         await saveOrder(stored)

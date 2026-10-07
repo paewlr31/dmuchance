@@ -247,10 +247,10 @@ export async function findByCancelToken(token: string) {
 export async function cancelByToken(token: string) {
   const order = await findByCancelToken(token)
   if (!order) return null
-  if (order.status === "cancelled") return order
+  if (order.status === "cancelled") return { order, changed: false }
   order.status = "cancelled"
   await saveOrder(order)
-  return order
+  return { order, changed: true }
 }
 
 export async function bookingsBySlug() {

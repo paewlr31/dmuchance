@@ -39,10 +39,28 @@ export function orderMessage(order: StoredOrder) {
     "",
     `Razem: ${formatPln(order.totalPln)}`,
     "",
-    order.cancelUrl ? `Anulowanie tej rezerwacji: ${order.cancelUrl}` : "",
-    order.cancelUrl ? "Po anulowaniu termin wraca do wolnych." : "",
+    order.cancelUrl ? `Lista rezerwacji: ${new URL(order.cancelUrl).origin}/rezerwacje` : "",
   ]
   return lines.filter((line) => line !== "").join("\n")
+}
+
+function reservationFacts(order: StoredOrder) {
+  return [
+    `Imię i nazwisko: ${order.customer.name}`,
+    `E-mail: ${order.customer.email}`,
+    `Telefon: ${order.customer.phoneRaw || order.customer.phone}`,
+    `Impreza: ${order.event.type}`,
+    `Od: ${order.event.dateFrom}, dostawa o ${order.event.timeFrom}`,
+    `Do: ${order.event.dateTo}, odbiór o ${order.event.timeTo}`,
+    `Miejsce: ${order.event.street}, ${order.event.postalCode} ${order.event.city}`,
+    order.event.guests ? `Liczba dzieci: ${order.event.guests}` : "",
+    order.event.notes ? `Uwagi: ${order.event.notes}` : "",
+    "",
+    "Co zamówiono:",
+    ...order.items.map((item) => `- ${item.name} × ${item.qty}`),
+    "",
+    `Razem: ${formatPln(order.totalPln)}`,
+  ].filter((line) => line !== "")
 }
 
 export async function sendOrderEmail(order: StoredOrder) {
@@ -60,6 +78,58 @@ export async function sendOrderEmail(order: StoredOrder) {
     text: orderMessage(order),
   })
 
+  if (error) throw new Error(error.message)
+}
+
+function cancelLink(order: StoredOrder) {
+  if (order.cancelUrl) return order.cancelUrl
+  const origin = process.env.SITE_URL?.replace(/\/$/, "") || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "")
+  if (!origin || !order.cancelToken) return ""
+  return `${origin}/rezerwacja/${order.cancelToken}`
+}
+
+export async function sendCustomerOrderEmail(order: StoredOrder) {
+  const mail = resendClient()
+  const link = cancelLink(order)
+  if (!mail || !link) return
+  const { error } = await mail.client.emails.send({
+    from: mail.from,
+    to: order.customer.email,
+    subject: `Rezerwacja przyjęta, ${order.event.dateFrom}`,
+    text: [
+      "Przyjęliśmy rezerwację dmuchańca.",
+      "",
+      ...reservationFacts(order),
+      "",
+      `Jeśli chcesz ją anulować, otwórz: ${link}`,
+    ].join("\n"),
+  })
+  if (error) throw new Error(error.message)
+}
+
+export async function sendCancellationToCustomer(order: StoredOrder) {
+  const mail = resendClient()
+  if (!mail) return
+  const { error } = await mail.client.emails.send({
+    from: mail.from,
+    to: order.customer.email,
+    subject: `Rezerwacja anulowana, ${order.event.dateFrom}`,
+    text: ["Twoja rezerwacja została anulowana.", "", ...reservationFacts(order)].join("\n"),
+  })
+  if (error) throw new Error(error.message)
+}
+
+export async function sendCancellationToOwner(order: StoredOrder) {
+  const mail = resendClient()
+  const to = process.env.ORDER_NOTIFY_EMAIL
+  if (!mail || !to) return
+  const { error } = await mail.client.emails.send({
+    from: mail.from,
+    to,
+    replyTo: order.customer.email,
+    subject: `Klient anulował rezerwację, ${order.customer.name}, ${order.event.dateFrom}`,
+    text: ["Klient anulował rezerwację.", "", ...reservationFacts(order)].join("\n"),
+  })
   if (error) throw new Error(error.message)
 }
 

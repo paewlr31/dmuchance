@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { clearReservationAdmin, grantReservationAdmin, isReservationAdmin, reservationPassword } from "@/lib/admin-session"
 import { formatRange } from "@/lib/dates"
+import { sendCancellationToCustomer } from "@/lib/mail"
 import { cancelByToken, listOrders } from "@/lib/orders"
 import { formatPln } from "@/lib/products"
 
@@ -27,7 +28,8 @@ async function logout() {
 async function cancel(formData: FormData) {
   "use server"
   if (!(await isReservationAdmin())) redirect("/rezerwacje")
-  await cancelByToken(String(formData.get("token") ?? ""))
+  const result = await cancelByToken(String(formData.get("token") ?? ""))
+  if (result?.changed) await sendCancellationToCustomer(result.order).catch(() => undefined)
   redirect("/rezerwacje")
 }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { sendOrderEmail } from "@/lib/mail"
+import { sendCustomerOrderEmail, sendOrderEmail } from "@/lib/mail"
 import { readOrder, saveOrder } from "@/lib/orders"
 import { p24Config, p24Sign, signaturesMatch, verifyTransaction } from "@/lib/p24"
 
@@ -70,6 +70,7 @@ export async function POST(request: Request) {
   if (!order.emailSent) {
     try {
       await sendOrderEmail(order)
+      await sendCustomerOrderEmail(order).catch(() => undefined)
       order.emailSent = true
       await saveOrder(order)
     } catch (error) {
