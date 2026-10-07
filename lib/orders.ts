@@ -45,10 +45,22 @@ function useBlob() {
 }
 
 function supabase() {
-  const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const url = process.env.SUPABASE_URL?.trim()
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/^["']|["']$/g, "")
   if (!url || !key) return null
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => {
+        const headers = new Headers(init?.headers)
+        if (key.startsWith("sb_secret_") || key.startsWith("sb_publishable_")) {
+          headers.delete("authorization")
+          headers.set("apikey", key)
+        }
+        return fetch(input, { ...init, headers })
+      },
+    },
+  })
 }
 
 export function ordersCanBeSaved() {

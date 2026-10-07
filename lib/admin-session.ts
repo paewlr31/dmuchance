@@ -21,3 +21,8 @@ export async function grantReservationAdmin() {
   const jar = await cookies()
   jar.set(cookieName, seal(), { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 12 })
 }
+
+export async function clearReservationAdmin() {
+  const jar = await cookies()
+  jar.set(cookieName, "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 })
+}

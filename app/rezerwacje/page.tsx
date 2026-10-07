@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
-import { grantReservationAdmin, isReservationAdmin, reservationPassword } from "@/lib/admin-session"
+import { clearReservationAdmin, grantReservationAdmin, isReservationAdmin, reservationPassword } from "@/lib/admin-session"
 import { formatRange } from "@/lib/dates"
 import { cancelByToken, listOrders } from "@/lib/orders"
 import { formatPln } from "@/lib/products"
@@ -15,6 +15,12 @@ async function login(formData: FormData) {
   "use server"
   if (!reservationPassword() || formData.get("haslo") !== reservationPassword()) return
   await grantReservationAdmin()
+  redirect("/rezerwacje")
+}
+
+async function logout() {
+  "use server"
+  await clearReservationAdmin()
   redirect("/rezerwacje")
 }
 
@@ -33,7 +39,14 @@ export default async function ReservationsPage() {
   return (
     <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
       <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-[#1c7c3a]">Obsługa</p>
-      <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl text-[#163024]">Rezerwacje</h1>
+      <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+        <h1 className="font-[family-name:var(--font-display)] text-4xl text-[#163024]">Rezerwacje</h1>
+        {allowed ? (
+          <form action={logout}>
+            <button className="rounded-full border-2 border-[#163024] px-4 py-2 text-sm font-extrabold">Wyloguj</button>
+          </form>
+        ) : null}
+      </div>
       {!passwordReady ? <p className="mt-4 text-[#4e6b5a]">Ustaw hasło REZERWACJE_HASLO w zmiennych środowiska, żeby otworzyć listę.</p> : null}
       {passwordReady && !allowed ? (
         <form action={login} className="mt-6 grid max-w-sm gap-3">
