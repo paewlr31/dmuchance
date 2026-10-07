@@ -13,7 +13,7 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#d7ecc4] bg-[#fffdf6]/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-[#eadc9a] bg-[#fffdf8]">
       <div className="bg-[#1c7c3a] px-4 py-2 text-center text-xs font-extrabold tracking-wide text-[#ffe14d] sm:text-sm">
         Siedem dmuchańców na imprezy · dowóz pod wskazany adres
       </div>

@@ -1,8 +1,10 @@
 import Link from "next/link"
+import { formatRange } from "@/lib/dates"
+import type { BookedSlot } from "@/lib/orders"
 import { formatMeters, formatPln, type Product } from "@/lib/products"
 import { AddToCartButton } from "@/components/add-to-cart"
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, booked = [] }: { product: Product; booked?: BookedSlot[] }) {
   return (
     <article className="flex flex-col overflow-hidden rounded-[1.6rem] border border-[#d7ecc4] bg-white shadow-[0_10px_30px_rgba(20,92,50,0.06)]">
       <Link href={`/dmuchance/${product.slug}`} className="relative block bg-[#fff4c2]">
@@ -25,6 +27,16 @@ export function ProductCard({ product }: { product: Product }) {
         <p className="mt-3 text-xs font-bold text-[#5d7a68]">
           {formatMeters(product.size)} · {product.stock} szt. w ofercie
         </p>
+        {booked.length > 0 ? (
+          <ul className="mt-3 grid gap-1 text-xs font-bold text-[#9a4d16]">
+            {booked.slice(0, 2).map((slot) => (
+              <li key={`${slot.from}-${slot.to}-${slot.qty}`}>
+                {formatRange(slot.from, slot.to)} · {slot.qty >= slot.stock ? "zajęty" : `zajęte ${slot.qty} z ${slot.stock}`}
+              </li>
+            ))}
+            {booked.length > 2 ? <li>i kolejne terminy na stronie dmuchańca</li> : null}
+          </ul>
+        ) : null}
         <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#e7f5d8] pt-4">
           <Link href={`/dmuchance/${product.slug}`} className="text-sm font-extrabold text-[#1c7c3a] underline-offset-4 hover:underline">
             Zobacz szczegóły

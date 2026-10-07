@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pl" className={nunito.variable}>
-      <body className="min-h-screen bg-[#fffdf6] font-[family-name:var(--font-body)] text-[#163024] antialiased">
+      <body className="min-h-screen font-[family-name:var(--font-body)] text-[#163024] antialiased">
         <CartProvider>
           <SiteHeader />
           <main>{children}</main>

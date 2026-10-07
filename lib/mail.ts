@@ -38,6 +38,9 @@ export function orderMessage(order: StoredOrder) {
     ),
     "",
     `Razem: ${formatPln(order.totalPln)}`,
+    "",
+    order.cancelUrl ? `Anulowanie tej rezerwacji: ${order.cancelUrl}` : "",
+    order.cancelUrl ? "Po anulowaniu termin wraca do wolnych." : "",
   ]
   return lines.filter((line) => line !== "").join("\n")
 }

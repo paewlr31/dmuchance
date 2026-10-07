@@ -2,7 +2,11 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ProductPurchase } from "@/components/add-to-cart"
+import { formatRange } from "@/lib/dates"
+import { bookingsForProduct } from "@/lib/orders"
 import { formatMeters, formatPln, getProduct, products, sharedFacts } from "@/lib/products"
+
+export const dynamic = "force-dynamic"
 
 type Params = { slug: string }
 
@@ -21,6 +25,7 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
   const { slug } = await params
   const product = getProduct(slug)
   if (!product) notFound()
+  const booked = await bookingsForProduct(product.slug)
 
   const facts = [
     ["Wymiary", formatMeters(product.size)],
@@ -49,6 +54,20 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
             </div>
           ))}
         </dl>
+        <div className="mt-6 rounded-[1.4rem] bg-white p-4">
+          <h2 className="font-extrabold">Zajęte terminy</h2>
+          {booked.length === 0 ? (
+            <p className="mt-2 text-sm text-[#4e6b5a]">Na najbliższy czas ten dmuchaniec nie ma rezerwacji.</p>
+          ) : (
+            <ul className="mt-3 grid gap-2 text-sm font-bold text-[#9a4d16]">
+              {booked.map((slot) => (
+                <li key={`${slot.from}-${slot.to}-${slot.qty}`}>
+                  {formatRange(slot.from, slot.to)} · {slot.qty >= slot.stock ? "zajęty, nie da się wynająć" : `zajęte ${slot.qty} z ${slot.stock} szt.`}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <div className="mt-6">
           <ProductPurchase slug={product.slug} stock={product.stock} />
         </div>

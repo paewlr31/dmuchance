@@ -123,6 +123,18 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
+}
+
+body {
+  background-color: #ffe9a3;
+  background-image:
+    radial-gradient(circle at 0% 0%, #fff4c4 0 180px, transparent 181px),
+    radial-gradient(circle at 100% 0%, #d8f56a 0 210px, transparent 211px),
+    radial-gradient(circle at 100% 100%, #ffcf70 0 160px, transparent 161px),
+    radial-gradient(circle at 0% 100%, #9ed96a 0 190px, transparent 191px),
+    radial-gradient(#fff8dc 1.4px, transparent 1.5px);
+  background-size: auto, auto, auto, auto, 28px 28px;
+  background-attachment: fixed;
 }

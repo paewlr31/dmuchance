@@ -19,6 +19,7 @@ export function CheckoutForm() {
   const [sending, setSending] = useState(false)
   const [done, setDone] = useState(false)
   const [payEnabled, setPayEnabled] = useState(false)
+  const [blocked, setBlocked] = useState("")
   const [dateFrom, setDateFrom] = useState(today())
   const [dateTo, setDateTo] = useState(today())
   const days = rentalDays(dateFrom, dateTo) ?? 0
@@ -36,8 +37,28 @@ export function CheckoutForm() {
       .catch(() => setPayEnabled(false))
   }, [])
 
+  useEffect(() => {
+    if (days < 1 || lines.length === 0) {
+      setBlocked("")
+      return
+    }
+    const query = new URLSearchParams({
+      from: dateFrom,
+      to: dateTo,
+      items: lines.map((line) => `${line.slug}:${line.qty}`).join(","),
+    })
+    const timer = window.setTimeout(() => {
+      fetch(`/api/dostepnosc?${query}`)
+        .then((response) => response.json())
+        .then((data: { problems?: string[] }) => setBlocked(data.problems?.[0] ?? ""))
+        .catch(() => setBlocked(""))
+    }, 250)
+    return () => window.clearTimeout(timer)
+  }, [dateFrom, dateTo, days, lines])
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (blocked) return
     const form = new FormData(event.currentTarget)
     setSending(true)
     setError("")
@@ -209,8 +230,9 @@ export function CheckoutForm() {
             </span>
           </label>
         ) : null}
+        {blocked ? <p className="rounded-2xl bg-[#fff1cc] px-4 py-3 text-sm font-bold">{blocked}</p> : null}
         {error ? <p className="rounded-2xl bg-[#fff1cc] px-4 py-3 text-sm font-bold">{error}</p> : null}
-        <button disabled={sending || days < 1} className="rounded-full bg-[#1c7c3a] px-6 py-4 font-extrabold text-white hover:bg-[#145c32] disabled:opacity-60">
+        <button disabled={sending || days < 1 || Boolean(blocked)} className="rounded-full bg-[#1c7c3a] px-6 py-4 font-extrabold text-white hover:bg-[#145c32] disabled:opacity-60">
           {sending ? "Wysyłam..." : payEnabled ? "Zapłać przez Przelewy24" : "Wyślij zamówienie"}
         </button>
       </div>

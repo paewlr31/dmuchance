@@ -2,7 +2,10 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { ProductCard } from "@/components/product-card"
+import { bookingsBySlug } from "@/lib/orders"
 import { products } from "@/lib/products"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Dmuchańce na imprezy",
@@ -11,7 +14,8 @@ export const metadata: Metadata = {
 
 const highlights = ["zamek-wrozek", "statek-piratow", "podwojna-zjezdzalnia"]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const booked = await bookingsBySlug()
   const featured = highlights.map((slug) => products.find((product) => product.slug === slug)).filter((product) => product != null)
 
   return (
@@ -65,7 +69,7 @@ export default function HomePage() {
         </div>
         <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {featured.map((product) => (
-            <ProductCard key={product.slug} product={product} />
+            <ProductCard key={product.slug} product={product} booked={booked[product.slug]} />
           ))}
         </div>
       </section>

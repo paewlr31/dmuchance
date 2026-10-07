@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { validateCheckout, type CheckoutInput } from "@/lib/booking"
 import { sendOrderEmail } from "@/lib/mail"
-import { availabilityProblems, newSessionId, ordersCanBeSaved, saveOrder, type StoredOrder } from "@/lib/orders"
+import { availabilityProblems, newCancelToken, newSessionId, ordersCanBeSaved, saveOrder, type StoredOrder } from "@/lib/orders"
 import { p24Config, registerTransaction, requestOrigin } from "@/lib/p24"
 
 export const runtime = "nodejs"
@@ -32,11 +32,14 @@ export async function POST(request: Request) {
     if (problems.length > 0) return NextResponse.json({ error: problems[0] }, { status: 409 })
 
     const sessionId = newSessionId()
+    const cancelToken = newCancelToken()
     const stored: StoredOrder = {
       sessionId,
+      cancelToken,
       createdAt: new Date().toISOString(),
       status: paymentOn ? "pending" : "received",
       emailSent: false,
+      cancelUrl: `${requestOrigin(request)}/rezerwacja/${cancelToken}`,
       ...order,
     }
     const persist = ordersCanBeSaved()
