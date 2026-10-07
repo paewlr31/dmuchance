@@ -60,15 +60,47 @@ export default async function ReservationsPage() {
           {orders.map((order) => (
             <article key={order.sessionId} className="rounded-2xl bg-white p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="font-extrabold">{order.customer.name}</h2>
-                  <p className="text-sm text-[#4e6b5a]">
-                    {formatRange(order.event.dateFrom, order.event.dateTo)} · {order.event.city} · {formatPln(order.totalPln)}
-                  </p>
-                  <p className="mt-1 text-sm font-bold">{order.items.map((item) => `${item.name} × ${item.qty}`).join(", ")}</p>
-                </div>
+                <h2 className="font-extrabold">{order.customer.name}</h2>
                 <p className="text-sm font-extrabold text-[#1c7c3a]">{order.status === "cancelled" ? "anulowana" : "aktywna"}</p>
               </div>
+              <dl className="mt-3 grid gap-1 text-sm text-[#163024]">
+                <div>
+                  <dt className="inline font-extrabold">E-mail: </dt>
+                  <dd className="inline">
+                    <a className="text-[#1c7c3a]" href={`mailto:${order.customer.email}`}>{order.customer.email}</a>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="inline font-extrabold">Telefon: </dt>
+                  <dd className="inline">{order.customer.phoneRaw || order.customer.phone}</dd>
+                </div>
+                <div>
+                  <dt className="inline font-extrabold">Impreza: </dt>
+                  <dd className="inline">{order.event.type}{order.event.guests ? `, dzieci: ${order.event.guests}` : ""}</dd>
+                </div>
+                <div>
+                  <dt className="inline font-extrabold">Termin: </dt>
+                  <dd className="inline">
+                    {formatRange(order.event.dateFrom, order.event.dateTo)}, dostawa {order.event.timeFrom}, odbiór {order.event.timeTo}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="inline font-extrabold">Adres: </dt>
+                  <dd className="inline">{order.event.street}, {order.event.postalCode} {order.event.city}</dd>
+                </div>
+                {order.event.notes ? (
+                  <div>
+                    <dt className="inline font-extrabold">Uwagi: </dt>
+                    <dd className="inline">{order.event.notes}</dd>
+                  </div>
+                ) : null}
+              </dl>
+              <ul className="mt-3 grid gap-1 text-sm font-bold">
+                {order.items.map((item) => (
+                  <li key={item.slug}>{item.name} × {item.qty} · {formatPln(item.lineTotal)}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-sm font-extrabold">Razem: {formatPln(order.totalPln)}</p>
               {order.status !== "cancelled" && order.cancelToken ? (
                 <form action={cancel} className="mt-3">
                   <input type="hidden" name="token" value={order.cancelToken} />
